@@ -663,7 +663,7 @@ let compile ignore_dirs libs warn_error target =
     let dontlink =
       match target with
       | `Xen | `Qubes | `Virtio | `Hvt | `Muen | `Genode | `Riscv ->
-        ["unix"; "threads"]
+        ["unix"; "num"; "str"; "threads"]
       | `Unix | `MacOSX -> []
     in
     let dont = List.map (fun k -> [ "-dontlink" ; k ]) dontlink in
