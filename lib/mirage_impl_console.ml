@@ -45,7 +45,7 @@ let console_riscv str = impl @@ object
     method name = name
     method module_name = "Console_riscv"
     method! packages =
-      Key.pure [ package "mirage-console-riscv-impl" ]
+      Key.pure [ package "mirage-console-impl-riscv" ]
     method! connect _ modname _args = Fmt.strf "%s.connect %S" modname str
   end
 
