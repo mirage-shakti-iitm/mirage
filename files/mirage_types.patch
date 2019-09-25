@@ -1,0 +1,24 @@
+diff --git a/types/mirage_types.ml b/types/mirage_types.ml
+index e150c35..25198cc 100644
+--- a/types/mirage_types.ml
++++ b/types/mirage_types.ml
+@@ -69,7 +69,7 @@ module type CONSOLE = Mirage_console.S
+ 
+ (** {2 Sector-addressible block devices} *)
+ 
+-module type BLOCK = Mirage_block.S
++(* module type BLOCK = Mirage_block.S *)
+ 
+ (** {2 Network module} *)
+ module type NETWORK = Mirage_net.S
+@@ -114,8 +114,8 @@ module type CHANNEL = Mirage_channel.S
+ 
+ (** {2 Static Key/value store} *)
+ 
+-module type KV_RO = Mirage_kv.RO
+-module type KV_RW = Mirage_kv.RW
++(* module type KV_RO = Mirage_kv.RO
++module type KV_RW = Mirage_kv.RW *)
+ 
+ (** {2 Filesystem devices} *)
+ 

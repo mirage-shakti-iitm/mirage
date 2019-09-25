@@ -1,0 +1,25 @@
+diff --git a/types/dune b/types/dune
+index 76f43be..b35e17c 100644
+--- a/types/dune
++++ b/types/dune
+@@ -4,8 +4,8 @@
+   (wrapped     false)
+   (modules     mirage_types)
+   (libraries   mirage-device mirage-time mirage-random mirage-flow
+-               mirage-console mirage-block mirage-clock mirage-net
+-               mirage-kv mirage-fs mirage-channel
++               mirage-console mirage-clock mirage-net
++               mirage-fs mirage-channel
+                mirage-protocols mirage-stack))
+ 
+ (library
+@@ -15,7 +15,7 @@
+   (modules     mirage_types_lwt)
+   (libraries   cstruct lwt ipaddr mirage-types
+                mirage-time-lwt mirage-random mirage-flow-lwt
+-               mirage-console-lwt mirage-block-lwt mirage-clock-lwt
+-               mirage-net-lwt mirage-kv-lwt mirage-fs-lwt
++               mirage-console-lwt mirage-clock-lwt
++               mirage-net-lwt mirage-fs-lwt
+                mirage-channel-lwt
+                mirage-protocols-lwt mirage-stack-lwt))
