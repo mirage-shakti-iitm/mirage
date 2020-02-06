@@ -559,14 +559,14 @@ let update_package_suffix suffix pkg =
   	let r = Str.regexp ".*-riscv-riscv" in
   		let opam_sanitized = if (Str.string_match r opam_initial 0) then pkg.opam else opam_initial
   and ocamlfind = Astring.String.Set.elements pkg.ocamlfind
-  and min = Astring.String.Set.choose pkg.min
-  and max = Astring.String.Set.choose pkg.max
+  and min = (* Astring.String.Set.choose *) pkg.min
+  and max = (* Astring.String.Set.choose *) pkg.max
   in
-    (* match (min, max) with
+    match (min, max) with
     | None, None -> package ~build ~ocamlfind opam_sanitized
     | (Some min), None -> package ~build ~ocamlfind ~min opam_sanitized
     | None, (Some max) ->  package ~build ~ocamlfind ~max opam_sanitized
-    | (Some min), (Some max) -> *) package ~build ~ocamlfind ~min ~max opam_sanitized
+    | (Some min), (Some max) -> package ~build ~ocamlfind ~min ~max opam_sanitized
 
 
 
