@@ -563,10 +563,10 @@ let update_package_suffix suffix pkg =
   and max = (* Astring.String.Set.choose *) pkg.max
   in
     match (min, max) with
-    | None, None -> package ~build ~ocamlfind opam_sanitized
-    | (Some min), None -> package ~build ~ocamlfind ~min opam_sanitized
-    | None, (Some max) ->  package ~build ~ocamlfind ~max opam_sanitized
-    | (Some min), (Some max) -> package ~build ~ocamlfind ~min ~max opam_sanitized
+    | None, None -> print_endline (opam_sanitized ^ " - "); package ~build ~ocamlfind opam_sanitized
+    | (Some min), None -> print_endline (opam_sanitized ^ " - " ^ min ^ " - "); package ~build ~ocamlfind ~min opam_sanitized
+    | None, (Some max) ->  print_endline (opam_sanitized ^ " - " ^ " - " ^ max); package ~build ~ocamlfind ~max opam_sanitized
+    | (Some min), (Some max) -> print_endline (opam_sanitized ^ " - " ^ min ^ " - " ^ max); package ~build ~ocamlfind ~min ~max opam_sanitized
 
 
 
