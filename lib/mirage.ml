@@ -622,7 +622,7 @@ let configure i =
   if target_debug && target <> `Hvt then
     Log.warn (fun m -> m "-g not supported for target: %a" Key.pp_target target);
   configure_myocamlbuild () >>= fun () ->
-  configure_opam ~name:opam_name (add_info_suffix target i) >>= fun () ->
+  configure_opam ~name:opam_name i (* (add_info_suffix target i) *) >>= fun () ->
   let no_depext = Key.(get ctx no_depext) in
   configure_makefile ~no_depext ~opam_name target >>= fun () ->
   match target with
