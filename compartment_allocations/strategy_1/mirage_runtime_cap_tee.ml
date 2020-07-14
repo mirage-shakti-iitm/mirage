@@ -10,6 +10,6 @@ camlMirage_runtime__level_of_string:15
 camlMirage_runtime__string_of_level:15
 camlMirage_runtime__parser:15
 camlMirage_runtime__serialize:15
-camlMirage_runtime_:255
+camlMirage_runtime_:115
 camlMirage_runtime__fun:15
 *)
