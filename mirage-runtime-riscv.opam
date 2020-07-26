@@ -29,11 +29,3 @@ synopsis: "The base MirageOS runtime library, part of every MirageOS unikernel"
 description: """
 A bundle of useful runtime functions for applications built with MirageOS
 """
-url {
-  src:
-    "https://github.com/mirage-shakti-iitm/mirage/archive/v3.5.0+riscv.tar.gz"
-  checksum: [
-    "md5=66d7b5dc2e011531851f7715faf05f5b"
-    "sha512=f969ea58c543df3861d65d94ea81cc775a478e1a25d73e5d0a32aea406df71a466c523ab03579f8f8ed456554d14a87f51e3284bfb9a62e53846d809b6e228cf"
-  ]
-}
