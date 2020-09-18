@@ -656,7 +656,8 @@ let compile ignore_dirs libs warn_error target =
        "strict_sequence";
        "principal"; 
        "-nostdlib";
-       "safe_string" ] @
+       "safe_string";
+       "function_sections" ] @
     (if warn_error then ["warn_error(+1..49)"] else []) @
     (match target with `MacOSX | `Unix -> ["thread"] | _ -> []) @
     (if terminal () then ["color(always)"] else [])
