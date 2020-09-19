@@ -933,6 +933,8 @@ module Project = struct
   let version = "v3.5.0"
   let prelude =
     "open Lwt.Infix\n\
+     open Main_cap_tee\n\
+     open Key_gen_cap_tee\n\
      let return = Lwt.return\n\
      let run = OS.Main.run"
 
