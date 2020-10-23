@@ -979,7 +979,7 @@ module Project = struct
           common
         | `Riscv ->
           package "mirage-riscv" ::
-          package "baremetal-linker-riscv" ::
+          (* package "baremetal-linker-riscv" :: *)
           common
 
       method! build = build
