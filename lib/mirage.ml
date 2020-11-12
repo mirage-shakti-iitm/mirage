@@ -657,6 +657,7 @@ let compile ignore_dirs libs warn_error target =
        "principal"; 
        "-nostdlib";
        "safe_string";
+       "asm";
        "function_sections" ] @
     (if warn_error then ["warn_error(+1..49)"] else []) @
     (match target with `MacOSX | `Unix -> ["thread"] | _ -> []) @
