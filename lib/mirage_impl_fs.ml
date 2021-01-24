@@ -10,7 +10,7 @@ type t = FS
 
 let typ = Type FS
 
-let fat_pkg = package ~min:"0.12.0" ~max:"0.13.0" "fat-filesystem"
+let fat_pkg = package ~min:"0.14.0" ~max:"0.15.0" "fat-filesystem"
 
 let fat_conf = impl @@ object
     inherit base_configurable
@@ -89,9 +89,9 @@ let kv_ro_of_fs_conf =
     inherit base_configurable
     method ty = typ @-> Mirage_impl_kv.ro
     method name = "kv_ro_of_fs"
-    method module_name = "Mirage_fs_lwt.To_KV_RO"
+    method module_name = "Mirage_fs.To_KV_RO"
     method! packages =
-      Key.pure [package ~min:"2.0.0" ~max:"3.0.0" "mirage-fs-lwt"]
+      Key.pure [package ~min:"3.0.0" ~max:"4.0.0" "mirage-fs"]
     method! connect _ modname = function
       | [fs] -> Fmt.strf "%s.connect %s" modname fs
       | _ -> failwith (connect_err "kv_ro_of_fs" 1)

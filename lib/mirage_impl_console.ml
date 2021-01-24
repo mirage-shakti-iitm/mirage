@@ -12,7 +12,7 @@ let console_unix str = impl @@ object
     method name = name
     method module_name = "Console_unix"
     method! packages =
-      Key.pure [ package ~min:"2.2.0" ~max:"3.0.0" "mirage-console-unix" ]
+      Key.pure [ package ~min:"4.0.0" ~max:"5.0.0" "mirage-console-unix" ]
     method! connect _ modname _args = Fmt.strf "%s.connect %S" modname str
   end
 
@@ -23,7 +23,7 @@ let console_xen str = impl @@ object
     method name = name
     method module_name = "Console_xen"
     method! packages =
-      Key.pure [ package ~min:"2.2.0" ~max:"3.0.0" "mirage-console-xen" ]
+      Key.pure [ package ~min:"4.0.0" ~max:"5.0.0" "mirage-console-xen" ]
     method! connect _ modname _args = Fmt.strf "%s.connect %S" modname str
   end
 
@@ -34,18 +34,7 @@ let console_solo5 str = impl @@ object
     method name = name
     method module_name = "Console_solo5"
     method! packages =
-      Key.pure [ package ~min:"0.3.0" ~max:"0.4.0" "mirage-console-solo5" ]
-    method! connect _ modname _args = Fmt.strf "%s.connect %S" modname str
-  end
-
-let console_riscv str = impl @@ object
-    inherit base_configurable
-    method ty = console
-    val name = Name.ocamlify @@ "console_riscv_" ^ str
-    method name = name
-    method module_name = "Console_riscv"
-    method! packages =
-      Key.pure [ package "mirage-console-impl-riscv" ]
+      Key.pure [ package ~min:"0.6.1" ~max:"0.7.0" "mirage-console-solo5" ]
     method! connect _ modname _args = Fmt.strf "%s.connect %S" modname str
   end
 
@@ -55,9 +44,9 @@ let custom_console str =
     `Qubes, console_xen str;
     `Virtio, console_solo5 str;
     `Hvt, console_solo5 str;
+    `Spt, console_solo5 str;
     `Muen, console_solo5 str;
-    `Genode, console_solo5 str;
-    `Riscv, console_riscv str
+    `Genode, console_solo5 str
   ] ~default:(console_unix str)
 
 let default_console = custom_console "0"

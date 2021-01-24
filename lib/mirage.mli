@@ -21,7 +21,7 @@
     portable applications across all platforms that MirageOS
     supports.
 
-   {e Release v3.5.0 } *)
+   {e Release v3.10.1 } *)
 
 
 (** Configuration keys. *)
@@ -120,15 +120,16 @@ val random: random typ
 (** Implementations of the [Mirage_types.RANDOM] signature. *)
 
 val stdlib_random: random impl
+[@@ocaml.deprecated "Mirage will always use a Fortuna PRNG."]
 (** Passthrough to the OCaml Random generator. *)
 
 val nocrypto_random: random impl
+[@@ocaml.deprecated "Mirage will always use a Fortuna PRNG."]
 (** Passthrough to the Fortuna PRNG implemented in nocrypto. *)
 
 val default_random: random impl
-(** Default PRNG device to be used in unikernels.  It defaults to {!stdlib}, but
-    users can override using the {!Key.prng} command line argument.
-*)
+(** Default PRNG device to be used in unikernels. It uses getrandom/getentropy
+    on Unix, and a Fortuna PRNG on other targets. *)
 
 
 
@@ -279,11 +280,13 @@ val arp : ?time:time impl -> ethernet impl -> arpv4 impl
 
 type v4
 type v6
+type v4v6
 
 (** Abstract type for IP configurations. *)
 type 'a ip
 type ipv4 = v4 ip
 type ipv6 = v6 ip
+type ipv4v6 = v4v6 ip
 
 val ipv4: ipv4 typ
 (** The [Mirage_types.IPV4] module signature. *)
@@ -291,21 +294,23 @@ val ipv4: ipv4 typ
 val ipv6: ipv6 typ
 (** The [Mirage_types.IPV6] module signature. *)
 
+val ipv4v6: ipv4v6 typ
+(** The [Mirage_types.IP] module signature with ipaddr = Ipaddr.t. *)
+
 type ipv4_config = {
-  network : Ipaddr.V4.Prefix.t * Ipaddr.V4.t;
+  network : Ipaddr.V4.Prefix.t;
   gateway : Ipaddr.V4.t option;
 }
-(** Types for IPv4 manual configuration. *)
+(** Type for manual IPv4 configuration. *)
 
 type ipv6_config = {
-  addresses : Ipaddr.V6.t list;
-  netmasks  : Ipaddr.V6.Prefix.t list;
-  gateways  : Ipaddr.V6.t list;
+  network : Ipaddr.V6.Prefix.t;
+  gateway : Ipaddr.V6.t option;
 }
-(** Types for IP manual configuration. *)
+(** Type for manual IPv6 configuration. *)
 
 val create_ipv4: ?group:string ->
-  ?config:ipv4_config -> ?random:random impl -> ?clock:mclock impl ->
+  ?config:ipv4_config -> ?no_init:bool Key.key -> ?random:random impl -> ?clock:mclock impl ->
   ethernet impl -> arpv4 impl -> ipv4 impl
 (** Use an IPv4 address
     Exposes the keys {!Key.V4.network} and {!Key.V4.gateway}.
@@ -320,28 +325,33 @@ val ipv4_qubes: ?random:random impl -> ?clock:mclock impl ->
 
 val create_ipv6:
   ?random:random impl -> ?time:time impl -> ?clock:mclock impl ->
-  ?group:string -> ethernet impl -> ipv6_config -> ipv6 impl
+  ?group:string -> ?config:ipv6_config -> ?no_init:bool Key.key -> network impl -> ethernet impl -> ipv6 impl
 (** Use an IPv6 address.
-    Exposes the keys {!Key.V6.ips}, {!Key.V6.netmasks} and {!Key.V6.gateways}.
+    Exposes the keys {!Key.V6.network} and {!Key.V6.gateway}.
 *)
 
-
+val create_ipv4v6 : ?group:string -> ipv4 impl -> ipv6 impl -> ipv4v6 impl
 
 (** {2 UDP configuration} *)
 
 type 'a udp
 type udpv4 = v4 udp
 type udpv6 = v6 udp
+type udpv4v6 = v4v6 udp
 
 (** Implementation of the [Mirage_types.UDP] signature. *)
 val udp: 'a udp typ
 val udpv4: udpv4 typ
 val udpv6: udpv6 typ
+val udpv4v6: udpv4v6 typ
 
 val direct_udp: ?random:random impl -> 'a ip impl -> 'a udp impl
 
 val socket_udpv4: ?group:string -> Ipaddr.V4.t option -> udpv4 impl
 
+val socket_udpv6: ?group:string -> Ipaddr.V6.t option -> udpv6 impl
+
+val socket_udpv4v6: ?group:string -> Ipaddr.V4.t option -> Ipaddr.V6.t option -> udpv4v6 impl
 
 
 (** {2 TCP configuration} *)
@@ -349,11 +359,13 @@ val socket_udpv4: ?group:string -> Ipaddr.V4.t option -> udpv4 impl
 type 'a tcp
 type tcpv4 = v4 tcp
 type tcpv6 = v6 tcp
+type tcpv4v6 = v4v6 tcp
 
 (** Implementation of the [Mirage_types.TCP] signature. *)
 val tcp: 'a tcp typ
 val tcpv4: tcpv4 typ
 val tcpv6: tcpv6 typ
+val tcpv4v6: tcpv4v6 typ
 
 val direct_tcp:
   ?clock:mclock impl ->
@@ -363,10 +375,13 @@ val direct_tcp:
 
 val socket_tcpv4: ?group:string -> Ipaddr.V4.t option -> tcpv4 impl
 
+val socket_tcpv6: ?group:string -> Ipaddr.V6.t option -> tcpv6 impl
 
+val socket_tcpv4v6: ?group:string -> Ipaddr.V4.t option -> Ipaddr.V6.t option -> tcpv4v6 impl
 
 (** {2 Network stack configuration} *)
 
+(** {3 IPv4} *)
 type stackv4
 
 val stackv4: stackv4 typ
@@ -380,9 +395,8 @@ val direct_stackv4:
   ?group:string ->
   network impl -> ethernet impl -> arpv4 impl -> ipv4 impl -> stackv4 impl
 
-(** Network stack with sockets. Exposes the key {!Key.V4.interfaces}. *)
-val socket_stackv4:
-  ?group:string -> Ipaddr.V4.t list -> stackv4 impl
+(** Network stack with sockets. *)
+val socket_stackv4: ?group:string -> unit -> stackv4 impl
 
 (** Build a stackv4 by looking up configuration information via QubesDB,
  *  building an ipv4, then building a stack on top of that. *)
@@ -390,7 +404,7 @@ val qubes_ipv4_stack: ?group:string -> ?qubesdb:qubesdb impl -> ?arp:(ethernet i
 
 (** Build a stackv4 by obtaining a DHCP lease, using the lease to
  *  build an ipv4, then building a stack on top of that. *)
-val dhcp_ipv4_stack: ?group:string -> ?random:random impl -> ?time:time impl -> ?arp:(ethernet impl -> arpv4 impl) -> network impl -> stackv4 impl
+val dhcp_ipv4_stack: ?group:string -> ?random:random impl -> ?clock:mclock impl -> ?time:time impl -> ?arp:(ethernet impl -> arpv4 impl) -> network impl -> stackv4 impl
 
 (** Build a stackv4 by checking the {!Key.V4.network}, and {!Key.V4.gateway} keys
  *  for ipv4 configuration information, filling in unspecified information from [?config],
@@ -413,12 +427,100 @@ val generic_stackv4:
   ?net_key:[ `Direct | `Socket ] option value ->
   network impl -> stackv4 impl
 
+(** {3 IPv6} *)
+
+type stackv6
+
+val stackv6 : stackv6 typ
+(** Implementation of the [Mirage_stack.V6] signature. *)
+
+val direct_stackv6 :
+     ?clock:mclock impl
+  -> ?random:random impl
+  -> ?time:time impl
+  -> ?group:string
+  -> network impl
+  -> ethernet impl
+  -> ipv6 impl
+  -> stackv6 impl
+(** Direct network stack with given ip. *)
+
+val socket_stackv6 : ?group:string -> unit -> stackv6 impl
+(** Network stack with sockets. *)
+
+val static_ipv6_stack: ?group:string -> ?config:ipv6_config -> network impl -> stackv6 impl
+(** Build a stackv6 by checking the {!Key.V6.network}, and {!Key.V6.gateway} keys
+    for ipv6 configuration information, filling in unspecified information from [?config],
+    then building a stack on top of that. *)
+
+val generic_stackv6 :
+     ?group:string
+  -> ?config:ipv6_config
+  -> ?net_key:[`Direct | `Socket] option value
+  -> network impl
+  -> stackv6 impl
+(** Generic stack using a [net] keys: {!Key.net}.
+    - If [net] = [socket] then {!socket_stackv6} is used
+    - Else, if [unix or macosx] then {!socket_stackv6} is used
+    - Else, {!static_ipv6_stack} is used.
+
+    If a key is not provided, it uses {!Key.net} (with the
+    [group] argument) to create it.
+*)
+
+(** {3 Dual IPv4 and IPv6} *)
+
+type stackv4v6
+
+val stackv4v6 : stackv4v6 typ
+(** Implementation of the [Mirage_stack.V4V6] signature. *)
+
+val direct_stackv4v6 :
+     ?clock:mclock impl
+  -> ?random:random impl
+  -> ?time:time impl
+  -> ?group:string
+  -> ipv4_only:bool Key.key
+  -> ipv6_only:bool Key.key
+  -> network impl
+  -> ethernet impl
+  -> arpv4 impl
+  -> ipv4 impl
+  -> ipv6 impl
+  -> stackv4v6 impl
+(** Direct network stack with given ip. *)
+
+val socket_stackv4v6 : ?group:string -> unit -> stackv4v6 impl
+(** Network stack with sockets. *)
+
+val static_ipv4v6_stack: ?group:string -> ?ipv6_config:ipv6_config -> ?ipv4_config:ipv4_config -> ?arp:(ethernet impl -> arpv4 impl) -> network impl -> stackv4v6 impl
+(** Build a stackv4v6 by checking the {!Key.V6.network}, and {!Key.V6.gateway} keys
+    for IPv4 and IPv6 configuration information, filling in unspecified information from [?config],
+    then building a stack on top of that. *)
+
+val generic_stackv4v6 :
+     ?group:string
+  -> ?ipv6_config:ipv6_config
+  -> ?ipv4_config:ipv4_config
+  -> ?dhcp_key:bool value
+  -> ?net_key:[`Direct | `Socket] option value
+  -> network impl
+  -> stackv4v6 impl
+(** Generic stack using a [net] keys: {!Key.net}.
+    - If [net] = [socket] then {!socket_stackv4v6} is used
+    - Else, if [unix or macosx] then {!socket_stackv4v6} is used
+    - Else, {!static_ipv4v6_stack} is used.
+
+    If a key is not provided, it uses {!Key.net} (with the
+    [group] argument) to create it.
+*)
+
 (** {2 Resolver configuration} *)
 
 type resolver
 val resolver: resolver typ
 val resolver_dns:
-  ?ns:Ipaddr.V4.t -> ?ns_port:int -> ?time:time impl -> stackv4 impl -> resolver impl
+  ?ns:Ipaddr.V4.t -> ?ns_port:int -> ?random:random impl -> ?time:time impl -> ?mclock:mclock impl -> stackv4 impl -> resolver impl
 val resolver_unix_system: resolver impl
 
 (** {2 Syslog configuration} *)
@@ -430,12 +532,12 @@ val resolver_unix_system: resolver impl
 
 type syslog_config = {
   hostname : string;
-  server   : Ipaddr.V4.t option;
+  server   : Ipaddr.t option;
   port     : int option;
   truncate : int option
 }
 
-val syslog_config: ?port:int -> ?truncate:int -> ?server:Ipaddr.V4.t -> string -> syslog_config
+val syslog_config: ?port:int -> ?truncate:int -> ?server:Ipaddr.t -> string -> syslog_config
 (** Helper for constructing a {!syslog_config}. *)
 
 type syslog
@@ -444,13 +546,13 @@ type syslog
 val syslog: syslog typ
 (** Implementation of the {!syslog} type. *)
 
-val syslog_udp: ?config:syslog_config -> ?console:console impl -> ?clock:pclock impl -> stackv4 impl -> syslog impl
+val syslog_udp: ?config:syslog_config -> ?console:console impl -> ?clock:pclock impl -> stackv4v6 impl -> syslog impl
 (** Emit log messages via UDP to the configured host. *)
 
-val syslog_tcp: ?config:syslog_config -> ?console:console impl -> ?clock:pclock impl -> stackv4 impl -> syslog impl
+val syslog_tcp: ?config:syslog_config -> ?console:console impl -> ?clock:pclock impl -> stackv4v6 impl -> syslog impl
 (** Emit log messages via TCP to the configured host. *)
 
-val syslog_tls: ?config:syslog_config -> ?keyname:string -> ?console:console impl -> ?clock:pclock impl -> stackv4 impl -> kv_ro impl -> syslog impl
+val syslog_tls: ?config:syslog_config -> ?keyname:string -> ?console:console impl -> ?clock:pclock impl -> stackv4v6 impl -> kv_ro impl -> syslog impl
 (** Emit log messages via TLS to the configured host, using the credentials
     (private ekey, certificate, trust anchor) provided in the KV_RO using the
     [keyname]. *)
@@ -458,7 +560,8 @@ val syslog_tls: ?config:syslog_config -> ?keyname:string -> ?console:console imp
 (** {2 Entropy} *)
 
 val nocrypto: job impl
-(** Device that initializes the entropy. *)
+[@@ocaml.deprecated "nocrypto is deprecated and not needed anymore."]
+(** Device that initializes the entropy. Deprecated and unused. *)
 
 (** {2 Conduit configuration} *)
 

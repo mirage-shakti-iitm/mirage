@@ -1,4 +1,4 @@
-version: "3.5.0"
+version: "3.10.1"
 opam-version: "2.0"
 maintainer:   ["anil@recoil.org" "thomas@gazagnaire.org"]
 authors:      ["Thomas Gazagnaire" "Anil Madhavapeddy" "Gabriel Radanne"
@@ -16,16 +16,17 @@ build: [
   ["dune" "build" "-p" name "-j" jobs]
   ["dune" "runtest" "-p" name "-j" jobs] {with-test}
 ]
-#install: [["dune" "install" "--prefix=%{prefix}%/riscv-sysroot" "mirage"]]
+
 depends: [
-  "ocaml" {>= "4.04.2"}
-  "dune" {build & >= "1.1.0"}
-  "ipaddr"             {>= "3.0.0" & < "5.0.0"}
-  "functoria"          {>= "2.2.4" & < "3.0.3"}
+  "ocaml" {>= "4.08.0"}
+  "dune" {>= "1.1.0"}
+  "ipaddr"             {>= "5.0.0"}
+  "functoria"          {>= "3.1.0"}
   "bos"
   "astring"
   "logs"
-  "mirage-runtime"     {>= "3.5.0"}
+  "stdlib-shims"
+  "mirage-runtime"     {=version | (>= "3.10.0" & < "3.11.0")}
 ]
 synopsis: "The MirageOS library operating system"
 description: """

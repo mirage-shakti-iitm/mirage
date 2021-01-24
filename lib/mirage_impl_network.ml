@@ -17,15 +17,14 @@ let network_conf (intf : string Key.key) =
     method! keys = [ key ]
     method! packages =
       Key.match_ Key.(value target) @@ function
-      | `Unix -> [ package ~min:"2.6.0" ~max:"3.0.0" "mirage-net-unix" ]
-      | `MacOSX -> [ package ~min:"1.6.0" ~max:"2.0.0" "mirage-net-macosx" ]
-      | `Xen -> [ package ~min:"1.10.0" ~max:"2.0.0" "mirage-net-xen"]
+      | `Unix -> [ package ~min:"2.7.0" ~max:"3.0.0" "mirage-net-unix" ]
+      | `MacOSX -> [ package ~min:"1.8.0" ~max:"2.0.0" "mirage-net-macosx" ]
+      | `Xen -> [ package ~min:"2.0.0" ~max:"3.0.0" "mirage-net-xen"]
       | `Qubes ->
-        [ package ~min:"1.10.0" ~max:"2.0.0" "mirage-net-xen" ;
+        [ package ~min:"2.0.0" ~max:"3.0.0" "mirage-net-xen" ;
           Mirage_impl_qubesdb.pkg ]
-      | `Virtio | `Hvt | `Muen | `Genode ->
-        [ package ~min:"0.4.2" ~max:"0.5.0" "mirage-net-solo5" ]
-      | `Riscv -> []
+      | #Mirage_key.mode_solo5 ->
+        [ package ~min:"0.6.1" ~max:"0.7.0" "mirage-net-solo5" ]
     method! connect _ modname _ =
       Fmt.strf "%s.connect %a" modname Key.serialize_call key
     method! configure i =
@@ -38,4 +37,11 @@ let default_network =
   match_impl Key.(value target) [
     `Unix   , netif "tap0";
     `MacOSX , netif "tap0";
+    (* On Solo5 targets, a single default network is customarily
+     * named just 'service' *)
+    `Hvt    , netif "service";
+    `Spt    , netif "service";
+    `Virtio , netif "service";
+    `Muen   , netif "service";
+    `Genode , netif "service";
   ] ~default:(netif "0")

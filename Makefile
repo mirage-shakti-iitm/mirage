@@ -1,7 +1,4 @@
-.PHONY: all clean doc test add-cap-files
-
-add-cap-files:
-	./choose_compartment_strategy.sh $(COMPARTMENT_STRATEGY_CHOICE)
+.PHONY: all clean doc test
 
 all:
 	dune build

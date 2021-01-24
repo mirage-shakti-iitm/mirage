@@ -16,28 +16,32 @@
 
 (** Mirage keys.
 
- {e Release v3.5.0 } *)
+ {e Release v3.10.1 } *)
 
 module Arg : sig
   include module type of struct include Functoria_key.Arg end
 
   val ipv4_address : Ipaddr.V4.t converter
-  val ipv4 : (Ipaddr.V4.Prefix.t * Ipaddr.V4.t) converter
-  val ipv6 : Ipaddr.V6.t converter
-  val ipv6_prefix : Ipaddr.V6.Prefix.t converter
+  val ipv4 : Ipaddr.V4.Prefix.t converter
+  val ipv6_address : Ipaddr.V6.t converter
+  val ipv6 : Ipaddr.V6.Prefix.t converter
 
+  val ip_address : Ipaddr.t converter
 end
 
 include Functoria.KEY with module Arg := Arg
 
-type mode = [ `Unix | `Xen | `Qubes | `MacOSX | `Virtio | `Hvt | `Muen | `Genode | `Riscv ]
+type mode_unix = [ `Unix | `MacOSX ]
+type mode_xen = [ `Xen | `Qubes ]
+type mode_solo5 = [ `Hvt | `Spt | `Virtio | `Muen | `Genode ]
+type mode = [ mode_unix | mode_xen | mode_solo5 ]
 
 (** {2 Mirage keys} *)
 
 val target: mode key
 (** [-t TARGET]: Key setting the configuration mode for the current project.
-    Is one of ["unix"], ["macosx"], ["xen"], ["qubes"], ["virtio"], ["hvt"], ["muen"], ["riscv"]
-    or ["genode"].
+    Is one of ["unix"], ["macosx"], ["xen"], ["qubes"], ["virtio"], ["hvt"],
+    ["muen"], ["genode"] or ["spt"].
 *)
 
 val pp_target: mode Fmt.t
@@ -45,6 +49,14 @@ val pp_target: mode Fmt.t
 
 val is_unix: bool value
 (** Is true iff the {!target} key is a UNIXish system (["unix" or "macosx"]).
+*)
+
+val is_solo5: bool value
+(** Is true iff the {!target} key is a Solo5-based target.
+*)
+
+val is_xen: bool value
+(** Is true iff the {!target} key is a Xen-based system (["xen" or "qubes"]).
 *)
 
 val warn_error: bool key
@@ -59,6 +71,44 @@ val no_depext: bool key
 
 val tracing_size: int -> int key
 (** [--tracing-size]: Key setting the tracing ring buffer size. *)
+
+(** {2 OCaml runtime keys}
+
+    The OCaml runtime is usually configurable via the [OCAMLRUNPARAM]
+    environment variable. We provide boot parameters covering these options. *)
+
+val backtrace : bool key
+(** [--backtrace]: Output a backtrace if an uncaught exception terminated the unikernel. *)
+
+val randomize_hashtables : bool key
+(** [--randomize-hashtables]: Randomize all hash tables. *)
+
+(** {3 GC control}
+
+    The OCaml garbage collector can be configured, as described in detail in
+    {{:http://caml.inria.fr/pub/docs/manual-ocaml/libref/Gc.html#TYPEcontrol}GC control}.
+
+    The following keys allow boot time configuration. *)
+
+val allocation_policy : [ `Next_fit | `First_fit | `Best_fit ] key
+
+val minor_heap_size : int option key
+
+val major_heap_increment : int option key
+
+val space_overhead : int option key
+
+val max_space_overhead : int option key
+
+val gc_verbosity : int option key
+
+val gc_window_size : int option key
+
+val custom_major_ratio : int option key
+
+val custom_minor_ratio : int option key
+
+val custom_minor_max_size : int option key
 
 (** {2 Generic keys}
 
@@ -104,36 +154,40 @@ val interface : ?group:string -> string -> string key
 module V4 : sig
   open Ipaddr.V4
 
-  val network : ?group:string -> (Prefix.t * t)-> (Prefix.t * t) key
+  val network : ?group:string -> Prefix.t -> Prefix.t key
   (** A network defined by an address and netmask. *)
 
   val gateway : ?group:string -> t option -> t option key
   (** A default gateway option. *)
-
-  val socket : ?group:string -> t option -> t option key
-  (** An IPv4 address bound by a socket. Will be none if no address is provided. *)
-
-  val ips : ?group:string -> t list -> t list key
-  (** A list of IPv4 addresses bound by a socket. *)
-
 end
 
 (** Ipv6 keys. *)
 module V6 : sig
   open Ipaddr.V6
 
-  val ips : ?group:string -> t list -> t list key
-  (** An ip address. *)
+  val network : ?group:string -> Prefix.t option -> Prefix.t option key
+  (** A network defined by an address and netmask. *)
 
-  val netmasks : ?group:string -> Prefix.t list -> Prefix.t list key
-  (** A list of netmasks. *)
+  val gateway : ?group:string -> t option -> t option key
+  (** A default gateway option. *)
 
-  val gateways : ?group:string -> t list -> t list key
-  (** A list of gateways. *)
-
+  val accept_router_advertisements : ?group:string -> unit -> bool key
+  (** An option whether to accept router advertisements. *)
 end
 
-val syslog: Ipaddr.V4.t option -> Ipaddr.V4.t option key
+val ipv4_only : ?group:string -> unit -> bool key
+(** An option for dual stack to only use IPv4. *)
+
+val ipv6_only : ?group:string -> unit -> bool key
+(** An option for dual stack to only use IPv6. *)
+
+val resolver: ?default:Ipaddr.V4.t -> unit -> Ipaddr.V4.t key
+(** The address of the DNS resolver to use. *)
+
+val resolver_port: ?default:int -> unit -> int key
+(** The port of the DNS resolver. *)
+
+val syslog: Ipaddr.t option -> Ipaddr.t option key
 (** The address to send syslog frames to. *)
 
 val syslog_port: int option -> int option key

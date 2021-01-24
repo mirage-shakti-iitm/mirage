@@ -1,3 +1,235 @@
+### v3.10.1 (2020-12-04)
+
+* Fix serialising of Mirage_key.Arg.ip_address: remove superfluous '.'
+  character (#1205 @hannesm)
+
+### v3.10.0 (2020-12-02)
+
+IPv6 and dual (IPv4 and IPv6) stack support #1187
+
+Since a long time, IPv6 code was around in our TCP/IP stack (thanks to @nojb
+who developed it in 2014). Some months ago, @hannesm and @MagnusS got excited
+to use it. After we managed to fix some bugs and add some test cases, and
+writing more code to setup IPv6-only and dual stacks, we are eager to share
+this support for MirageOS in a released version. We expect there to be bugs
+lingering around, but duplicate address detection (neighbour solicitation and
+advertisements) has been implemented, and (unless
+"--accept-router-advertisement=false") router advertisements are decoded and
+used to configure the IPv6 part of the stack. Configuring a static IPv6 address
+is also possible (with "--ipv6=2001::42/64").
+
+While at it, we unified the boot arguments between the different targets:
+namely, on Unix (when using the socket stack), you can now pass
+"--ipv4=127.0.0.1/24" to the same effect as the direct stack: only listen
+on 127.0.0.1 (the subnet mask is ignored for the Unix socket stack).
+
+A dual stack unikernel has "--ipv4-only=BOOL" and "--ipv6-only=BOOL" parameters,
+so a unikernel binary could support both Internet Protocol versions, while the
+operator can decide which protocol version to use.
+
+Please also note that the default IPv4 network configuration no longer uses
+10.0.0.1 as default gateway (since there was no way to unset the default
+gateway #1147).
+
+For unikernel developers, there are some API changes in the Mirage module
+- New "v4v6" types for IP protocols and stacks
+- The ipv6_config record was adjusted in the same fashion as the ipv4_config
+  type: it is now a record of a network (V6.Prefix.t) and gateway (V6.t option)
+
+Some parts of the Mirage_key module were unified as well:
+- Arp.ip_address is available (for a dual Ipaddr.t)
+- Arg.ipv6_address replaces Arg.ipv6 (for an Ipaddr.V6.t)
+- Arg.ipv6 replaces Arg.ipv6_prefix (for a Ipaddr.V6.Prefix.t)
+- V6.network and V6.gateway are available, mirroring the V4 submodule
+
+If you're ready to experiment with the dual stack, here's a diff for our basic
+network example (from mirage-skeleton/device-usage/network) replacing IPv4
+with a dual stack:
+
+```
+diff --git a/device-usage/network/config.ml b/device-usage/network/config.ml
+index c425edb..eabc9d6 100644
+--- a/device-usage/network/config.ml
++++ b/device-usage/network/config.ml
+@@ -4,9 +4,9 @@ let port =
+   let doc = Key.Arg.info ~doc:"The TCP port on which to listen for incoming connections." ["port"] in
+   Key.(create "port" Arg.(opt int 8080 doc))
+ 
+-let main = foreign ~keys:[Key.abstract port] "Unikernel.Main" (stackv4 @-> job)
++let main = foreign ~keys:[Key.abstract port] "Unikernel.Main" (stackv4v6 @-> job)
+ 
+-let stack = generic_stackv4 default_network
++let stack = generic_stackv4v6 default_network
+ 
+ let () =
+   register "network" [
+diff --git a/device-usage/network/unikernel.ml b/device-usage/network/unikernel.ml
+index 5d29111..1bf1228 100644
+--- a/device-usage/network/unikernel.ml
++++ b/device-usage/network/unikernel.ml
+@@ -1,19 +1,19 @@
+ open Lwt.Infix
+ 
+-module Main (S: Mirage_stack.V4) = struct
++module Main (S: Mirage_stack.V4V6) = struct
+ 
+   let start s =
+     let port = Key_gen.port () in
+-    S.listen_tcpv4 s ~port (fun flow ->
+-        let dst, dst_port = S.TCPV4.dst flow in
++    S.listen_tcp s ~port (fun flow ->
++        let dst, dst_port = S.TCP.dst flow in
+         Logs.info (fun f -> f "new tcp connection from IP %s on port %d"
+-                  (Ipaddr.V4.to_string dst) dst_port);
+-        S.TCPV4.read flow >>= function
++                  (Ipaddr.to_string dst) dst_port);
++        S.TCP.read flow >>= function
+         | Ok `Eof -> Logs.info (fun f -> f "Closing connection!"); Lwt.return_unit
+-        | Error e -> Logs.warn (fun f -> f "Error reading data from established connection: %a" S.TCPV4.pp_error e); Lwt.return_unit
++        | Error e -> Logs.warn (fun f -> f "Error reading data from established connection: %a" S.TCP.pp_error e); Lwt.return_unit
+         | Ok (`Data b) ->
+           Logs.debug (fun f -> f "read: %d bytes:\n%s" (Cstruct.len b) (Cstruct.to_string b));
+-          S.TCPV4.close flow
++          S.TCP.close flow
+       );
+ 
+     S.listen s
+```
+
+Other bug fixes include #1188 (in #1201) and adapt to charrua 1.3.0 and
+arp 2.3.0 changes (#1199).
+
+### v3.9.0 (2020-10-24)
+
+The Xen backend is a minimal legacy-free re-write: Solo5 (since 0.6.6) provides
+the low-level glue code, and ocaml-freestanding provides the OCaml runtime. The
+PV-only Mini-OS implementation has been retired.
+
+The only supported virtualization mode is now Xen PVH (version 2 or above),
+supported since Xen version 4.10 or later (and Qubes OS 4.0).
+
+The support for the ARM32 architecture on Xen has been removed.
+
+Security posture improvements:
+
+With the move to a Solo5 and ocaml-freestanding base MirageOS gains several
+notable improvements to security posture for unikernels on Xen:
+
+* Stack smashing protection is enabled unconditionally for all C code.
+* W^X is enforced throughout, i.e. `.text` is read-execute, `.rodata` is
+  read-only, non-executable and `.data`, heap and stack are read-write and
+  non-executable.
+* The memory allocator used by the OCaml runtime is now dlmalloc (provided by
+  ocaml-freestanding), which is a big improvement over the Mini-OS malloc, and
+  incorporates features such as heap canaries.
+
+Interface changes:
+
+* With the rewrite of the Xen core platform stack, several Xen-specific APIs
+  have changed in incompatible ways; unikernels may need to be updated. Please
+  refer to the mirage-xen v6.0.0 [change
+  log](https://github.com/mirage/mirage-xen/releases/tag/v6.0.0) for a list of
+  interfaces that have changed along with their replacements.
+
+Other changes:
+
+* OCaml 4.08 is the minimum supported version.
+* A dummy `dev-repo` field is emitted for the generated opam file.
+* .xe files are no longer generated.
+* Previous versions of MirageOS would strip boot parameters on Xen, since Qubes
+  OS 3.x added arguments that could not be interpreted by our command line
+  parser. Since Qubes OS 4.0 this is no longer an issue, and MirageOS no longer
+  strips any boot parameters. You may need to execute
+  `qvm-prefs qube-name kernelopts ''`.
+
+Acknowledgements:
+
+* Thanks to Roger Pau Monné, Andrew Cooper and other core Xen developers for
+  help with understanding the specifics of how PVHv2 works, and how to write an
+  implementation from scratch.
+* Thanks to Marek Marczykowski-Górecki for help with the Qubes OS specifics, and
+  for forward-porting some missing parts of PVHv2 to Qubes OS version of Xen.
+* Thanks to @palainp on Github for help with testing on Qubes OS.
+
+### v3.8.1 (2020-09-22)
+
+* OCaml runtime parameters (OCAMLPARAM) are exposed as boot and configure
+  arguments. This allows e.g. to switch to the best-fit garbage collection
+  strategy (#1180 @hannesm)
+
+### v3.8.0 (2020-06-22)
+
+* Emit type=pv in xl (instead of builder=linux), as required by xen 4.10+ (#1166 by @djs55)
+* adapt to ipaddr 5.0.0, tcpip 5.0.0, mirage-crypto 0.8 (#1172 @hannesm)
+
+### v3.7.7 (2020-05-18)
+
+* handle errors from Bos.OS.Cmd.run_out
+* use PREFIX if defined (no need to call "opam config var prefix")
+* adapt to conduit 2.2.0, tls 0.12, mirage-crypto 0.7.0 changes
+
+### v3.7.6 (2020-03-18)
+
+* fix conduit with 3.7.5 changes (#1086, @hannesm)
+
+### v3.7.5 (2020-03-15)
+
+* use mirage-crypto (and mirage-crypto-entropy) instead of nocrypto, also
+  tls-mirage and up-to-date conduit (#1068, @hannesm)
+
+### v3.7.4 (2019-12-20)
+
+* use `git rev-parse --abbrev-ref HEAD` instead of `git branch --show-current`
+  for emitting branch information into the opam file. The latter is only
+  available in git 2.22 or later, while the former seems to be supported by
+  old git releases. (#1024, @hannesm)
+
+### v3.7.3 (2019-12-17)
+
+* `mirage configure` now emits build and install steps into generated opam file
+  this allows to use `opam install .` to actually install a unikernel.
+  (#1022 @hannesm)
+* refactor configure, build and link step into separate modules (#1017 @dinosaure)
+
+### v3.7.2 (2019-11-18)
+
+* adjust fat-filesystem constraints to >= 0.14 && < 0.15 (#1015, @hannesm)
+
+### v3.7.1 (2019-11-03)
+
+* clean opam files when `mirage configure` is executed (#1013 @dinosaure)
+* deprecate mirage-types and mirage-types-lwt (#1006 @hannesm)
+* remove abstraction over 'type 'a io' and 'buffer', remove mirage-*-lwt packages (#1006 @hannesm)
+* unify targets in respect to hooks (Mirage_runtime provides the hooks and registration)
+* unify targets in respect to error handling (no toplevel try .. with installed anymore, mirage-unix does no longer ignore all errors)
+
+### v3.7.0 (2019-11-01)
+
+* mirage-runtime: provide at_enter_iter/at_exit_iter/at_exit hooks for the event loop (#1010, @samoht @dinosaure @hannesm)
+* call `exit 0` after the Lwt event loop returned (to run at_exit handlers in freestanding environments) (#1011, @hannesm)
+* NOTE: this release only contains the mirage-runtime opam package to unblock other releases, there'll be a 3.7.1 soon
+
+### v3.6.0 (2019-10-02)
+
+* solo5 0.6 support for multiple devices (#993, by @mato)
+  please read https://github.com/Solo5/solo5/blob/v0.6.2/CHANGES.md for detailed changes
+  observable mirage changes:
+  - new target `-t spt` for sandboxed processed tender (seccomp on Linux)
+  - new functions Mirage_key.is_solo5 and Mirage_key.is_xen, analogue to Mirage_key.is_unix
+* respect verbosity when calling `ocamlbuild` -- verbose if log level is info or debug (#999, by @mato)
+
+### v3.5.2 (2019-08-22)
+
+* Adapt to conduit 2.0.0 release, including dns 4.0.0 (#996, by @hannesm)
+* Adjust mirage-xen constraints to < 5.0.0 (#995, by @reynir)
+
+### v3.5.1 (2019-07-11)
+
+* Adapt to new tracing API (#985, by @talex5)
+* Remove stubs for qrexec and qubes gui (qubes 3 is end of life, qubes 4 makes it configurable) (#984, by @linse & @yomimono)
+* Update mirage-logs and charrua-client-mirage version constraints (#982, by @hannesm)
+* Remove unused dockerfile, travis updates (#982 #990, by @hannesm)
+
 ### v3.5.0 (2019-03-03)
 
 * Rename Mirage_impl_kv_ro to Mirage_impl_kv, and introduce `rw` (#975, by @hannesm)

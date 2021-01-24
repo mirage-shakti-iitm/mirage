@@ -17,17 +17,7 @@ let argv_solo5 = impl @@ object
     method name = "argv_solo5"
     method module_name = "Bootvar"
     method! packages =
-      Key.pure [ package ~min:"0.3.0" ~max:"0.4.0" "mirage-bootvar-solo5" ]
-    method! connect _ _ _ = "Bootvar.argv ()"
-  end
-
-let argv_riscv = impl @@ object
-    inherit base_configurable
-    method ty = Functoria_app.argv
-    method name = "argv_riscv"
-    method module_name = "Bootvar"
-    method! packages =
-      Key.pure [ package "mirage-bootvar-riscv" ]
+      Key.pure [ package ~min:"0.6.0" ~max:"0.7.0" "mirage-bootvar-solo5" ]
     method! connect _ _ _ = "Bootvar.argv ()"
   end
 
@@ -45,13 +35,8 @@ let argv_xen = impl @@ object
     method name = "argv_xen"
     method module_name = "Bootvar"
     method! packages =
-      Key.pure [ package ~min:"0.5.0" ~max:"0.6.0" "mirage-bootvar-xen" ]
-    method! connect _ _ _ = Fmt.strf
-      (* Some hypervisor configurations try to pass some extra arguments.
-       * They means well, but we can't do much with them,
-       * and they cause Functoria to abort. *)
-      "let filter (key, _) = List.mem key (List.map snd Key_gen.runtime_keys) in@ \
-       Bootvar.argv ~filter ()"
+      Key.pure [ package ~min:"0.8.0" ~max:"0.9.0" "mirage-bootvar-xen" ]
+    method! connect _ _ _ = "Bootvar.argv ()"
   end
 
 let default_argv =
@@ -62,5 +47,5 @@ let default_argv =
     `Hvt, argv_solo5;
     `Muen, argv_solo5;
     `Genode, argv_solo5;
-    `Riscv, argv_riscv
+    `Spt, argv_solo5
   ] ~default:argv_unix

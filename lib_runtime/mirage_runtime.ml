@@ -56,21 +56,12 @@ module Arg = struct
   let of_module (type t) (module M:S with type t = t) =
     make M.of_string M.to_string
 
-  let ip = of_module (module Ipaddr)
+  let ip_address = of_module (module Ipaddr)
   let ipv4_address = of_module (module Ipaddr.V4)
-  let ipv4 =
-    let serialize fmt (prefix, ip) =
-      Format.fprintf fmt "%S" @@ Ipaddr.V4.Prefix.to_address_string prefix ip
-    in
-    let parse str =
-      match Ipaddr.V4.Prefix.of_address_string str with
-      | Error (`Msg m) -> `Error (str ^ " is not a valid IPv4 address and netmask: " ^ m)
-      | Ok n -> `Ok n
-    in
-    parse, serialize
+  let ipv4 = of_module (module Ipaddr.V4.Prefix)
 
-  let ipv6 = of_module (module Ipaddr.V6)
-  let ipv6_prefix = of_module (module Ipaddr.V6.Prefix)
+  let ipv6_address = of_module (module Ipaddr.V6)
+  let ipv6 = of_module (module Ipaddr.V6.Prefix)
 
   let log_threshold =
     let enum = [
@@ -100,7 +91,38 @@ module Arg = struct
     in
     parser, serialize
 
+  let allocation_policy =
+    Cmdliner.Arg.enum [
+      "next-fit", `Next_fit;
+      "first-fit", `First_fit;
+      "best-fit", `Best_fit
+    ]
 end
 
 include
   (Functoria_runtime: module type of Functoria_runtime with module Arg := Arg)
+
+let exit_hooks = ref []
+
+let enter_iter_hooks = ref []
+
+let leave_iter_hooks = ref []
+
+let run t = List.iter (fun f -> f ()) !t
+
+let add f t = t := f :: !t
+
+let run_exit_hooks () =
+  Lwt_list.iter_s
+    (fun hook -> Lwt.catch (fun () -> hook ()) (fun _  -> Lwt.return_unit))
+    !exit_hooks
+
+let run_enter_iter_hooks () = run enter_iter_hooks
+
+let run_leave_iter_hooks () = run leave_iter_hooks
+
+let at_exit f = add f exit_hooks
+
+let at_leave_iter f = add f leave_iter_hooks
+
+let at_enter_iter f = add f enter_iter_hooks
