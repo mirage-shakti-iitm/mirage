@@ -43,6 +43,7 @@ let right_tcpip_library ?ocamlfind ~sublibs pkg =
     [ package ~min ~max ?ocamlfind ~sublibs:("unix"::sublibs) pkg ]
   | #Mirage_key.mode_xen | #Mirage_key.mode_solo5 ->
     [ package ~min ~max ?ocamlfind ~sublibs pkg ]
+  | #Mirage_key.mode_riscv -> []
 
 let ipv4_keyed_conf ~ip ?gateway ?no_init () = impl @@ object
     inherit base_configurable

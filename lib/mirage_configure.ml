@@ -131,6 +131,15 @@ let clean_opam ~name target =
 let configure_makefile ~no_depext ~opam_name =
   let open Codegen in
   let file = Fpath.(v "Makefile") in
+  let additional_content = match target with
+  | #Mirage_key.mode_riscv -> "OCAML_FREESTANDING_RISCV_PATH := $(shell opam config exec --  ocamlfind -toolchain riscv query ocaml-freestanding-riscv)\n\
+                MIRAGE_RISCV_BINDINGS_PATH = $(shell opam config exec -- ocamlfind -toolchain riscv query mirage-riscv)\n\
+                LINKER_PATH = $(shell opam config exec -- ocamlfind -toolchain riscv query baremetal-linker-riscv)\n\
+                BOOT_PATH := $(shell opam config exec --  ocamlfind -toolchain riscv query ocaml-boot-riscv)\n\
+                kernel::\n\
+                \triscv64-unknown-elf-g++  -mcmodel=medany _build/main.native.o -o kernel -static -nostdlib -nostartfiles -Wl,-T$(LINKER_PATH)/linker.x -Wl,--start-group $(OCAML_FREESTANDING_RISCV_PATH)/libnolibc.a $(BOOT_PATH)/libboot.a $(OCAML_FREESTANDING_RISCV_PATH)/libasmrun.a $(MIRAGE_RISCV_BINDINGS_PATH)/libmirage-riscv_bindings.a -Wl,--end-group -lm -lgcc\n"
+  | _ -> ""
+  in
   with_output file (fun oc () ->
       let fmt = Format.formatter_of_out_channel oc in
       append fmt "# %s" (generated_header ());
@@ -155,8 +164,48 @@ let configure_makefile ~no_depext ~opam_name =
                   clean::\n\
                   \tmirage clean\n"
         opam_name opam_name opam_name depext;
+        newline fmt;
+        append fmt "%s" additional_content;
       R.ok ())
     "Makefile"
+
+let update_packages_suffix suffix pkgs =
+  let rec loop acc = function 
+    | [] -> List.concat acc
+    | pkg::ps ->
+      let build_package ?version ?is_min pkg =
+        let build = pkg.build in
+        let opam_initial = if build then pkg.opam else pkg.opam^suffix in
+        let r = Str.regexp ".*-riscv-riscv" in
+        let opam_sanitized = if (Str.string_match r opam_initial 0) then pkg.opam else opam_initial in
+        let ocamlfind = Astring.String.Set.elements pkg.ocamlfind in 
+        begin match version with 
+          | None -> package ~build ~ocamlfind opam_sanitized 
+          | Some v -> 
+            if is_min = Some true then package ~build ~ocamlfind ~min:v opam_sanitized 
+            else package ~build ~ocamlfind ~max:v opam_sanitized  
+        end 
+      in
+        let mins = (Astring.String.Set.elements pkg.min) in
+        let maxs = (Astring.String.Set.elements pkg.max) in 
+        let packages = if (Astring.String.Set.is_empty pkg.min) && (Astring.String.Set.is_empty pkg.max) then [build_package pkg]
+        else (List.map (fun version -> build_package ~version ~is_min:true  pkg) mins) @ (List.map (fun version -> build_package ~version ~is_min:false pkg) maxs) in 
+          loop (packages :: acc) ps
+    in 
+      loop [] pkgs
+
+let add_info_suffix target info =
+  let suffix = match target with 
+    | `Riscv -> "-riscv"
+    | _ -> ""
+  in
+  let name = Info.name info 
+  and build_dir = Info.build_dir info 
+  and context = Info.context info 
+  and keys = Info.keys info 
+  and packages = Info.packages info in
+  let packages = update_packages_suffix suffix packages in
+    Info.create ~packages ~keys ~context ~build_dir ~name
 
 let configure i =
   let name = Info.name i in
@@ -170,9 +219,9 @@ let configure i =
     Log.warn (fun m -> m "-g not supported for target: %a" Key.pp_target target);
   configure_myocamlbuild () >>= fun () ->
   rr_iter (clean_opam ~name)
-    [`Unix; `MacOSX; `Xen; `Qubes; `Hvt; `Spt; `Virtio; `Muen; `Genode]
+    [`Unix; `MacOSX; `Xen; `Qubes; `Hvt; `Spt; `Virtio; `Muen; `Genode; `Riscv]
   >>= fun () ->
-  configure_opam ~name:opam_name i >>= fun () ->
+  configure_opam ~name:opam_name (add_info_suffix target i) >>= fun () ->
   let no_depext = Key.(get ctx no_depext) in
   configure_makefile ~no_depext ~opam_name >>= fun () ->
   (match target with

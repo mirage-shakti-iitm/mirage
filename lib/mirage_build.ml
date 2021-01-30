@@ -19,17 +19,20 @@ let compile ignore_dirs libs warn_error target =
     (if terminal () then ["color(always)"] else [])
   and result = match target with
     | #Mirage_key.mode_unix -> "main.native"
-    | #Mirage_key.mode_xen | #Mirage_key.mode_solo5 -> "main.native.o"
+    | #Mirage_key.mode_xen | #Mirage_key.mode_solo5 | #Mirage_key.mode_riscv -> "main.native.o"
   and cflags = [ "-g" ]
   and lflags =
     let dontlink =
       match target with
-      | #Mirage_key.mode_xen | #Mirage_key.mode_solo5 ->
+      | #Mirage_key.mode_xen | #Mirage_key.mode_solo5 | #Mirage_key.mode_riscv ->
         ["unix"; "str"; "num"; "threads"]
       | #Mirage_key.mode_unix -> []
     in
     let dont = List.map (fun k -> [ "-dontlink" ; k ]) dontlink in
     "-g" :: List.flatten dont
+  and cross_toolchain = match target with
+    | #Mirage_key.mode_riscv -> "riscv"
+    | _ -> ""
   in
   let concat = String.concat ~sep:"," in
   let ignore_dirs = match ignore_dirs with
@@ -41,6 +44,7 @@ let compile ignore_dirs libs warn_error target =
   | _ -> true
   in
   let cmd = Bos.Cmd.(v "ocamlbuild" % "-use-ocamlfind" %
+                     "-toolchain" % cross_toolchain %
                      "-classic-display" %%
                      on want_quiet_build (v "-quiet") %
                      "-tags" % concat tags %

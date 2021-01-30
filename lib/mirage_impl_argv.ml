@@ -21,6 +21,16 @@ let argv_solo5 = impl @@ object
     method! connect _ _ _ = "Bootvar.argv ()"
   end
 
+let argv_riscv = impl @@ object
+    inherit base_configurable
+    method ty = Functoria_app.argv
+    method name = "argv_riscv"
+    method module_name = "Bootvar"
+    method! packages =
+      Key.pure [ package ~min:"0.6.0" ~max:"0.7.0" "mirage-bootvar-riscv" ]
+    method! connect _ _ _ = "Bootvar.argv ()"
+  end
+
 let no_argv = impl @@ object
     inherit base_configurable
     method ty = Functoria_app.argv
@@ -47,5 +57,6 @@ let default_argv =
     `Hvt, argv_solo5;
     `Muen, argv_solo5;
     `Genode, argv_solo5;
-    `Spt, argv_solo5
+    `Spt, argv_solo5;
+    `Riscv, argv_riscv
   ] ~default:argv_unix

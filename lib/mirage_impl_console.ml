@@ -38,6 +38,17 @@ let console_solo5 str = impl @@ object
     method! connect _ modname _args = Fmt.strf "%s.connect %S" modname str
   end
 
+let console_riscv str = impl @@ object
+    inherit base_configurable
+    method ty = console
+    val name = Name.ocamlify @@ "console_riscv_" ^ str
+    method name = name
+    method module_name = "Console_riscv"
+    method! packages =
+      Key.pure [ package ~min:"0.6.1" ~max:"0.7.0" "mirage-console-impl-riscv" ]
+    method! connect _ modname _args = Fmt.strf "%s.connect %S" modname str
+  end
+
 let custom_console str =
   match_impl Key.(value target) [
     `Xen, console_xen str;
@@ -46,7 +57,8 @@ let custom_console str =
     `Hvt, console_solo5 str;
     `Spt, console_solo5 str;
     `Muen, console_solo5 str;
-    `Genode, console_solo5 str
+    `Genode, console_solo5 str;
+    `Riscv, console_riscv str
   ] ~default:(console_unix str)
 
 let default_console = custom_console "0"

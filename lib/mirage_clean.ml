@@ -15,14 +15,15 @@ let clean i =
   Mirage_configure.clean_myocamlbuild () >>= fun () ->
   Mirage_configure_solo5.clean_manifest () >>= fun () ->
   Bos.OS.File.delete Fpath.(v "Makefile") >>= fun () ->
+  Bos.OS.File.delete Fpath.(v "kernel") >>= fun () ->  
   rr_iter (Mirage_configure.clean_opam ~name)
-    [`Unix; `MacOSX; `Xen; `Qubes; `Hvt; `Spt; `Virtio; `Muen; `Genode]
+    [`Unix; `MacOSX; `Xen; `Qubes; `Hvt; `Spt; `Virtio; `Muen; `Genode; `Riscv]
   >>= fun () ->
   Bos.OS.File.delete Fpath.(v "main.native.o") >>= fun () ->
   Bos.OS.File.delete Fpath.(v "main.native") >>= fun () ->
   Bos.OS.File.delete Fpath.(v name) >>= fun () ->
   rr_iter (clean_binary name)
-    ["xen"; "elf"; "hvt"; "spt"; "virtio"; "muen"; "genode"]
+    ["xen"; "elf"; "hvt"; "spt"; "virtio"; "muen"; "genode"; "riscv"]
   >>= fun () ->
   (* The following deprecated names are kept here to allow "mirage clean" to
    * continue to work after an upgrade. *)

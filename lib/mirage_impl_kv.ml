@@ -54,7 +54,8 @@ let direct_kv_ro dirname =
     `Hvt, crunch dirname;
     `Spt, crunch dirname;
     `Muen, crunch dirname;
-    `Genode, crunch dirname
+    `Genode, crunch dirname;
+    `Riscv, crunch dirname
   ] ~default:(direct_kv_ro dirname)
 
 type rw = RW

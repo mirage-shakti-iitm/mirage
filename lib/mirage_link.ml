@@ -33,6 +33,7 @@ let link info name target _target_debug =
     let link = Bos.Cmd.(v "ln" % "-nfs" % "_build/main.native" % name) in
     Bos.OS.Cmd.run link >>= fun () ->
     Ok name
+  | #Mirage_key.mode_riscv -> Ok name
   | #Mirage_key.mode_solo5 | #Mirage_key.mode_xen ->
     let bindings = Mirage_configure_solo5.solo5_bindings_pkg target in
     let platform = Mirage_configure_solo5.solo5_platform_pkg target in

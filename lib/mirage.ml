@@ -268,6 +268,10 @@ module Project = struct
           package ~min:"0.6.0" ~max:"0.7.0" ~ocamlfind:[] (Mirage_configure_solo5.solo5_bindings_pkg tgt) ::
           package ~min:"0.6.1" ~max:"0.7.0" "mirage-solo5" ::
           common
+        | #Mirage_key.mode_riscv ->
+          package ~min:"0.6.1" ~max:"0.7.0" "mirage-riscv" ::
+          package "baremetal-linker-riscv" ::
+          common
 
       method! build = build
       method! configure = configure
