@@ -20,7 +20,7 @@ build: [
 depends: [
   "ocaml-riscv" {>= "4.08.0"}
   "dune" {>= "1.1.0"}
-  "ipaddr0-riscv"             {>= "5.0.0"}
+  "ipaddr-riscv"             {>= "5.0.0"}
   "functoria-runtime-riscv"  {>= "3.0.2"}
   "fmt-riscv"
   "logs-riscv"
