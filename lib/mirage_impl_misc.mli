@@ -19,8 +19,8 @@ val query_ocamlfind :
      ?recursive:bool
   -> ?format:string
   -> ?predicates:string
+  -> ?backend_target:Mirage_key.mode
   -> string list
-  -> Mirage_key.mode
   -> (string list, [> Rresult.R.msg]) result
 
 val opam_prefix : (string, [> R.msg ]) result Lazy.t

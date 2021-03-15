@@ -25,8 +25,7 @@ let mprof_trace ~size () =
         [ package ~max:"1.0.0" "mirage-profile";
           package ~max:"1.0.0" "mirage-profile-unix" ]
     method! build _ =
-      let backend_target = get_target i
-      match query_ocamlfind ["lwt.tracing"] backend_target with
+      match query_ocamlfind ["lwt.tracing"] with
       | Error _ | Ok [] ->
         R.error_msg "lwt.tracing module not found. Hint:\
                      opam pin add lwt https://github.com/mirage/lwt.git#tracing"
