@@ -25,9 +25,9 @@ let query_ocamlfind ?(recursive = false) ?(format="%p") ?predicates libs =
     | None -> []
     | Some x -> [ "-predicates" ; x ]
   and q = "query"
-  and cross_toolchain = match Mirage_key.is_riscv with
-    | true -> Cmd.of_list [ "-toolchain"; "riscv" ]
-    | false -> Cmd.empty
+  and cross_toolchain = match target with
+    | #Mirage_key.mode_riscv -> Cmd.of_list [ "-toolchain"; "riscv" ]
+    | _ -> Cmd.empty
   in
   let cmd =
     Cmd.(v "ocamlfind" %% cross_toolchain %% v q %% flag %% format %% of_list predicate %% of_list libs)

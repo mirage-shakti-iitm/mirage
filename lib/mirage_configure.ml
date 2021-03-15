@@ -131,14 +131,14 @@ let clean_opam ~name target =
 let configure_makefile ~no_depext ~opam_name target =
   let open Codegen in
   let file = Fpath.(v "Makefile") in
-  let additional_content = match Key.is_riscv with
-  | true -> "OCAML_FREESTANDING_RISCV_PATH := $(shell opam config exec --  ocamlfind -toolchain riscv query ocaml-freestanding-riscv)\n\
+  let additional_content = match target with
+  | #Mirage_key.mode_riscv -> "OCAML_FREESTANDING_RISCV_PATH := $(shell opam config exec --  ocamlfind -toolchain riscv query ocaml-freestanding-riscv)\n\
                 MIRAGE_RISCV_BINDINGS_PATH = $(shell opam config exec -- ocamlfind -toolchain riscv query mirage-riscv)\n\
                 LINKER_PATH = $(shell opam config exec -- ocamlfind -toolchain riscv query baremetal-linker-riscv)\n\
                 BOOT_PATH := $(shell opam config exec --  ocamlfind -toolchain riscv query ocaml-boot-riscv)\n\
                 kernel::\n\
                 \triscv64-unknown-elf-g++  -mcmodel=medany _build/main.native.o -o kernel -static -nostdlib -nostartfiles -Wl,-T$(LINKER_PATH)/linker.x -Wl,--start-group $(OCAML_FREESTANDING_RISCV_PATH)/libnolibc.a $(BOOT_PATH)/libboot.a $(OCAML_FREESTANDING_RISCV_PATH)/libasmrun.a $(MIRAGE_RISCV_BINDINGS_PATH)/libmirage-riscv_bindings.a -Wl,--end-group -lm -lgcc\n"
-  | false -> ""
+  | _ -> ""
   in
   with_output file (fun oc () ->
       let fmt = Format.formatter_of_out_channel oc in
@@ -223,7 +223,7 @@ let configure i =
   >>= fun () ->
   configure_opam ~name:opam_name (add_info_suffix target i) >>= fun () ->
   let no_depext = Key.(get ctx no_depext) in
-  configure_makefile ~no_depext ~opam_name >>= fun () ->
+  configure_makefile ~no_depext ~opam_name target >>= fun () ->
   (match target with
     | #Mirage_key.mode_solo5 -> generate_manifest_json true ()
     (* On Xen, a Solo5 manifest must be present to keep the build system and
