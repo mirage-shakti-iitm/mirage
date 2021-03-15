@@ -1,5 +1,3 @@
-module Key = Mirage_key
-open Functoria
 open Rresult
 open Astring
 
@@ -19,7 +17,7 @@ let with_output ?mode f k err =
 
 let pp_key fmt k = Mirage_key.serialize_call fmt (Mirage_key.abstract k)
 
-let query_ocamlfind ?(recursive = false) ?(format="%p") ?predicates libs =
+let query_ocamlfind ?(recursive = false) ?(format="%p") ?predicates libs backend_target =
   let open Bos in
   let flag = if recursive then (Cmd.v "-recursive") else Cmd.empty
   and format = Cmd.of_list [ "-format" ; format ]
@@ -27,7 +25,7 @@ let query_ocamlfind ?(recursive = false) ?(format="%p") ?predicates libs =
     | None -> []
     | Some x -> [ "-predicates" ; x ]
   and q = "query"
-  and cross_toolchain = Key.match_ Key.(value target) @@ function
+  and cross_toolchain = match backend_target with
     | #Mirage_key.mode_riscv -> Cmd.of_list [ "-toolchain"; "riscv" ]
     | _ -> Cmd.empty
   in
@@ -74,13 +72,13 @@ let rec expand_name ~lib param =
 
 (* Get the linker flags for any extra C objects we depend on.
  * This is needed when building a Xen/Solo5 image as we do the link manually. *)
-let extra_c_artifacts target pkgs =
+let extra_c_artifacts target pkgs backend_target =
   Lazy.force opam_prefix >>= fun prefix ->
   let lib = prefix ^ "/lib" in
   let format = Fmt.strf "%%d\t%%(%s_linkopts)" target
   and predicates = "native"
   in
-  query_ocamlfind ~recursive:true ~format ~predicates pkgs >>= fun data ->
+  query_ocamlfind ~recursive:true ~format ~predicates pkgs backend_target >>= fun data ->
   let r = List.fold_left (fun acc line ->
       match String.cut line ~sep:"\t" with
       | None -> acc

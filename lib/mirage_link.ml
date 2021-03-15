@@ -37,7 +37,7 @@ let link info name target _target_debug =
   | #Mirage_key.mode_solo5 | #Mirage_key.mode_xen ->
     let bindings = Mirage_configure_solo5.solo5_bindings_pkg target in
     let platform = Mirage_configure_solo5.solo5_platform_pkg target in
-    extra_c_artifacts "freestanding" libs >>= fun c_artifacts ->
+    extra_c_artifacts "freestanding" libs target >>= fun c_artifacts ->
     static_libs platform
     >>= fun static_libs ->
     ldflags bindings >>= fun ldflags ->
