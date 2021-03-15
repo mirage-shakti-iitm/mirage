@@ -1,3 +1,5 @@
+module Key = Mirage_key
+open Functoria
 open Rresult
 open Astring
 
@@ -25,7 +27,7 @@ let query_ocamlfind ?(recursive = false) ?(format="%p") ?predicates libs =
     | None -> []
     | Some x -> [ "-predicates" ; x ]
   and q = "query"
-  and cross_toolchain = match target with
+  and cross_toolchain = Key.match_ Key.(value target) @@ function
     | #Mirage_key.mode_riscv -> Cmd.of_list [ "-toolchain"; "riscv" ]
     | _ -> Cmd.empty
   in
