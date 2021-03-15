@@ -34,7 +34,8 @@ include Functoria.KEY with module Arg := Arg
 type mode_unix = [ `Unix | `MacOSX ]
 type mode_xen = [ `Xen | `Qubes ]
 type mode_solo5 = [ `Hvt | `Spt | `Virtio | `Muen | `Genode ]
-type mode = [ mode_unix | mode_xen | mode_solo5 ]
+type mode_riscv = [ `Riscv ]
+type mode = [ mode_unix | mode_xen | mode_solo5 | mode_riscv ]
 
 (** {2 Mirage keys} *)
 
@@ -53,6 +54,10 @@ val is_unix: bool value
 
 val is_solo5: bool value
 (** Is true iff the {!target} key is a Solo5-based target.
+*)
+
+val is_riscv: bool value
+(** Is true iff the {!target} key is a RiscV-based target.
 *)
 
 val is_xen: bool value
