@@ -11,6 +11,6 @@ val opam_name : name:string -> target:string -> string
 val configure_opam : name:string -> Functoria.Info.t -> (unit, [> R.msg ]) result
 val clean_opam : name:string -> Mirage_key.mode -> (unit, [> R.msg ]) result
 
-val configure_makefile : no_depext:bool -> opam_name:string -> (unit, [> R.msg ]) result
+val configure_makefile : no_depext:bool -> opam_name:string -> Mirage_key.mode -> (unit, [> R.msg ]) result
 
 val configure : Functoria.Info.t -> (unit, [> R.msg ]) result

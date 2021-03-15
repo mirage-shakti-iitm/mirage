@@ -128,7 +128,7 @@ let unikernel_opam_name ~name target =
 let clean_opam ~name target =
   Bos.OS.File.delete (opam_path ~name:(unikernel_opam_name ~name target))
 
-let configure_makefile ~no_depext ~opam_name =
+let configure_makefile ~no_depext ~opam_name target =
   let open Codegen in
   let file = Fpath.(v "Makefile") in
   let additional_content = match target with
@@ -223,7 +223,7 @@ let configure i =
   >>= fun () ->
   configure_opam ~name:opam_name (add_info_suffix target i) >>= fun () ->
   let no_depext = Key.(get ctx no_depext) in
-  configure_makefile ~no_depext ~opam_name >>= fun () ->
+  configure_makefile ~no_depext ~opam_name target >>= fun () ->
   (match target with
     | #Mirage_key.mode_solo5 -> generate_manifest_json true ()
     (* On Xen, a Solo5 manifest must be present to keep the build system and
