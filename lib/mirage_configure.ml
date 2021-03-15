@@ -196,7 +196,7 @@ let update_packages_suffix suffix pkgs =
 
 let add_info_suffix target info =
   let suffix = match target with 
-    | `Riscv -> "-riscv"
+    | #Mirage_key.mode_riscv -> "-riscv"
     | _ -> ""
   in
   let name = Info.name info 
