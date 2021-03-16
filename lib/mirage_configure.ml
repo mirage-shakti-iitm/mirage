@@ -36,7 +36,7 @@ let artifact ~name = function
     let ext = Mirage_configure_solo5.bin_extension tgt in
     let file = Fpath.v (name ^ ext) in
     file, file
-  | #Mirage_key.mode_unix ->
+  | #Mirage_key.mode_unix | #Mirage_key.mode_riscv ->
     Fpath.(v "_build" / "main" + "native"), Fpath.v name
 
 let additional_artifacts ~name =
