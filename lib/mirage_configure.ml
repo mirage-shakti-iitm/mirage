@@ -187,7 +187,7 @@ let update_packages_suffix suffix pkgs =
             else package ~build ~ocamlfind ~max:v opam_sanitized  
         end 
       in *)
-        let mins = (Astring.String.Set.elements pk.Functoria.min) in
+        let mins = (Astring.String.Set.elements pk.min) in
         let maxs = (Astring.String.Set.elements pk.Functoria.max) in 
         let packages = pk in
         (* if (Astring.String.Set.is_empty pkg.min) && (Astring.String.Set.is_empty pkg.max) then [build_package pkg]
