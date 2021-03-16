@@ -11,6 +11,7 @@ open Mirage_configure_solo5
 
 let myocamlbuild_path = Fpath.(v "myocamlbuild.ml")
 
+
 (* ocamlbuild will give a misleading hint on build failures
  * ( https://github.com/ocaml/ocamlbuild/blob/0eb62b72b5abd520484210125b18073338a634bc/src/ocaml_compiler.ml#L130 )
  * if it doesn't detect that the project is an ocamlbuild
@@ -170,24 +171,25 @@ let configure_makefile ~no_depext ~opam_name target =
     "Makefile"
 
 let update_packages_suffix suffix pkgs =
+  (* let open Functoria in *)
   let rec loop acc = function 
     | [] -> List.concat acc
     | pkg::ps ->
       let build_package ?version ?is_min pkg =
-        let build = pkg.build in
+        let build = pkg.Functoria.build in
         let opam_initial = if build then pkg.opam else pkg.opam^suffix in
         let r = Str.regexp ".*-riscv-riscv" in
         let opam_sanitized = if (Str.string_match r opam_initial 0) then pkg.opam else opam_initial in
         let ocamlfind = Astring.String.Set.elements pkg.ocamlfind in 
         begin match version with 
-          | None -> package ~build ~ocamlfind opam_sanitized 
+          | None -> Functoria.package ~build ~ocamlfind opam_sanitized 
           | Some v -> 
-            if is_min = Some true then package ~build ~ocamlfind ~min:v opam_sanitized 
-            else package ~build ~ocamlfind ~max:v opam_sanitized  
+            if is_min = Some true then Functoria.package ~build ~ocamlfind ~min:v opam_sanitized 
+            else Functoria.package ~build ~ocamlfind ~max:v opam_sanitized  
         end 
       in
-        let mins = (Astring.String.Set.elements pkg.min) in
-        let maxs = (Astring.String.Set.elements pkg.max) in 
+        let mins = (Astring.String.Set.elements pkg.Functoria.min) in
+        let maxs = (Astring.String.Set.elements pkg.Functoria.max) in 
         let packages = if (Astring.String.Set.is_empty pkg.min) && (Astring.String.Set.is_empty pkg.max) then [build_package pkg]
         else (List.map (fun version -> build_package ~version ~is_min:true  pkg) mins) @ (List.map (fun version -> build_package ~version ~is_min:false pkg) maxs) in 
           loop (packages :: acc) ps
