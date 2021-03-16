@@ -172,8 +172,8 @@ let configure_makefile ~no_depext ~opam_name target =
 let update_packages_suffix suffix pkgs =
   let rec loop acc = function 
     | [] -> List.concat acc
-    | pkg::ps ->
-      let build_package ?version ?is_min pkg =
+    | pk::ps ->
+(*       let build_package ?version ?is_min pkg =
         let mins = (Astring.String.Set.elements pkg.min) in
         let build = true (* pkg.build *) in
         let opam_initial = if build then pkg.opam else pkg.opam^suffix in
@@ -186,11 +186,12 @@ let update_packages_suffix suffix pkgs =
             if is_min = Some true then package ~build ~ocamlfind ~min:v opam_sanitized 
             else package ~build ~ocamlfind ~max:v opam_sanitized  
         end 
-      in
-        let mins = (Astring.String.Set.elements pkg.min) in
-        let maxs = (Astring.String.Set.elements pkg.max) in 
-        let packages = if (Astring.String.Set.is_empty pkg.min) && (Astring.String.Set.is_empty pkg.max) then [build_package pkg]
-        else (List.map (fun version -> build_package ~version ~is_min:true  pkg) mins) @ (List.map (fun version -> build_package ~version ~is_min:false pkg) maxs) in 
+      in *)
+        let mins = (Astring.String.Set.elements pk.min) in
+        let maxs = (Astring.String.Set.elements pk.max) in 
+        let packages = pk in
+        (* if (Astring.String.Set.is_empty pkg.min) && (Astring.String.Set.is_empty pkg.max) then [build_package pkg]
+        else (List.map (fun version -> build_package ~version ~is_min:true  pkg) mins) @ (List.map (fun version -> build_package ~version ~is_min:false pkg) maxs) in  *)
           loop (packages :: acc) ps
     in 
       loop [] pkgs
