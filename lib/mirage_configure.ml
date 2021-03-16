@@ -174,7 +174,8 @@ let update_packages_suffix suffix pkgs =
     | [] -> List.concat acc
     | pkg::ps ->
       let build_package ?version ?is_min pkg =
-        let build = pkg.build in
+        let mins = (Astring.String.Set.elements pkg.min) in
+        let build = true (* pkg.build *) in
         let opam_initial = if build then pkg.opam else pkg.opam^suffix in
         let r = Str.regexp ".*-riscv-riscv" in
         let opam_sanitized = if (Str.string_match r opam_initial 0) then pkg.opam else opam_initial in
@@ -203,8 +204,8 @@ let add_info_suffix target info =
   and build_dir = Info.build_dir info 
   and context = Info.context info 
   and keys = Info.keys info 
-  and packages = Info.packages info in
-  let packages = update_packages_suffix suffix packages in
+  and packages_list = Info.packages info in
+  let packages = update_packages_suffix suffix packages_list in
     Info.create ~packages ~keys ~context ~build_dir ~name
 
 let configure i =
