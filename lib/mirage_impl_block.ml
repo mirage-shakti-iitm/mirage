@@ -71,7 +71,8 @@ class block_conf file =
         [ package ~min:"0.6.1" ~max:"0.7.0" "mirage-block-solo5" ]
       | #Mirage_key.mode_unix ->
         [ package ~min:"2.12.0" ~max:"3.0.0" "mirage-block-unix" ]
-
+      | #Mirage_key.mode_riscv ->
+        [ package ~min:"0.6.1" ~max:"0.7.0" "mirage-block-ricv" ]
     method! configure _ =
       let _block = make_block_t file in
       R.ok ()
