@@ -18,21 +18,10 @@ build: [
 ]
 
 depends: [
-  "ocaml" {>= "4.08.0"}
+  "ocaml-riscv" {>= "4.08.0"}
   "dune" {>= "1.1.0"}
-  "mirage-device" {>= "2.0.0"}
-  "mirage-time" {>= "2.0.0"}
-  "mirage-clock" {>= "3.0.0"}
-  "mirage-random" {>= "2.0.0"}
-  "mirage-flow" {>= "2.0.0"}
-  "mirage-console" {>= "3.0.0"}
-  "mirage-protocols" {>= "5.0.0"}
-  "mirage-stack" {>= "2.2.0"}
-  "mirage-block" {>= "2.0.0"}
-  "mirage-net" {>= "3.0.0"}
-  "mirage-fs" {>= "3.0.0"}
-  "mirage-kv" {>= "3.0.0"}
-  "mirage-channel" {>= "4.0.0"}
+  "mirage-time-riscv" {>= "2.0.0"}
+  "mirage-clock-riscv" {>= "3.0.0"}
 ]
 synopsis: "Module type definitions for MirageOS applications"
 description: """
