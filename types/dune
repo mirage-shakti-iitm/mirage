@@ -3,7 +3,7 @@
   (public_name mirage-types)
   (wrapped     false)
   (modules     mirage_types)
-  (libraries   mirage-time mirage-clock))
+  (libraries   mirage-time mirage-clock mirage-random))
 
 (library
   (name        mirage_types_lwt)

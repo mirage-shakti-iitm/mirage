@@ -63,8 +63,8 @@ module type PCLOCK = Mirage_clock.PCLOCK
 (** {2 Random}
 
     Operations to generate random numbers. *)
-(* module type RANDOM = Mirage_random.S *)
-(* [@@ocaml.deprecated "This will be removed from MirageOS 4.0, use Mirage_random.S."] *)
+module type RANDOM = Mirage_random.S
+[@@ocaml.deprecated "This will be removed from MirageOS 4.0, use Mirage_random.S."]
 
 (** {2 Connection between endpoints} *)
 

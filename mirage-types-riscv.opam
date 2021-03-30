@@ -22,6 +22,7 @@ depends: [
   "dune" {>= "1.1.0"}
   "mirage-time-riscv" {>= "2.0.0"}
   "mirage-clock-riscv" {>= "3.0.0"}
+  "mirage-random-riscv"
 ]
 synopsis: "Module type definitions for MirageOS applications"
 description: """
