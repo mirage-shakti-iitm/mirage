@@ -3,13 +3,11 @@
   (public_name mirage-types)
   (wrapped     false)
   (modules     mirage_types)
-  (libraries   mirage-time mirage-clock mirage-random)
-  (ocamlopt_flags (-default-compartment-id 1 -function-sections)))
+  (libraries   mirage-time mirage-clock mirage-random))
 
 (library
   (name        mirage_types_lwt)
   (public_name mirage-types-lwt)
   (wrapped     false)
   (modules     mirage_types_lwt)
-  (libraries   mirage-types)
-  (ocamlopt_flags (-default-compartment-id 1 -function-sections)))
+  (libraries   mirage-types))
