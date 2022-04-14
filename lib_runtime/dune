@@ -3,4 +3,4 @@
   (public_name mirage-runtime)
   (wrapped     false)
   (libraries   functoria-runtime lwt ipaddr logs fmt)
-  (ocamlopt_flags (-default-compartment-id 255 -function-sections)))
+  (ocamlopt_flags (-default-compartment-id 1 -function-sections)))
