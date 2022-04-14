@@ -27,7 +27,7 @@ let argv_riscv = impl @@ object
     method name = "argv_riscv"
     method module_name = "Bootvar"
     method! packages =
-      Key.pure [ package ~min:"0.6.0" ~max:"0.7.0" "mirage-bootvar-riscv" ]
+      Key.pure [ package ~min:"0.6.0" ~max:"0.7.0" "mirage-bootvar-riscv-riscv" ]
     method! connect _ _ _ = "Bootvar.argv ()"
   end
 
