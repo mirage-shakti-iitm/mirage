@@ -13,6 +13,7 @@ let compile ignore_dirs libs warn_error target =
       "bin_annot";
       "strict_sequence";
       "principal";
+      "function_sections";
       "safe_string" ] @
     (if warn_error then ["warn_error(+1..49)"] else []) @
     (match target with `MacOSX | `Unix -> ["thread"] | _ -> []) @
