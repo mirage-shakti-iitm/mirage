@@ -4,7 +4,7 @@
   (wrapped     false)
   (modules     mirage_types)
   (libraries   mirage-time mirage-clock mirage-random)
-  (ocamlopt_flags (-default-compartment-id 37 -function-sections)))
+  (ocamlopt_flags (-default-compartment-id 36 -function-sections)))
 
 (library
   (name        mirage_types_lwt)
