@@ -270,7 +270,6 @@ module Project = struct
           common
         | #Mirage_key.mode_riscv ->
           package ~min:"0.6.1" ~max:"0.7.0" "mirage-riscv" ::
-          package "baremetal-linker-riscv" ::
           common
 
       method! build = build
